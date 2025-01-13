@@ -1,0 +1,39 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+
+package chat_proto;
+
+/**
+ * Base events types for chat server
+ */
+enum Types_Chat {
+	Type_Auth= 0; /// @see Auth/OnAuth
+	Type_IM = 1; /// @see IM
+	Type_ServiceIM = 2; /// @see ServiceIM
+}
+
+/**
+ * 
+ */
+message Auth {
+	string nick = 1;
+	bytes token = 2;
+}
+
+/**
+ * 
+ */
+message IM {
+	uint32 id = 1;
+	string nick = 2;
+	string message = 3;
+}
+
+/**
+ * 
+ */
+message ServiceIM {
+	uint32 id = 1;
+	string nick = 2;
+	string action = 3;
+}

@@ -1,0 +1,8 @@
+/**
+ *  OTUS homework module
+ *  (c) 2024
+ */
+
+#pragma once
+
+#cmakedefine PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@
