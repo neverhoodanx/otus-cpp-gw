@@ -16,8 +16,9 @@ enum Types_Chat {
  * 
  */
 message Auth {
-	string nick = 1;
-	bytes token = 2;
+	uint32 id = 1;
+	string nick = 2;
+	bytes token = 3;
 }
 
 /**
@@ -33,7 +34,14 @@ message IM {
  * 
  */
 message ServiceIM {
+	enum Actions {
+		room_list = 0;
+		user_list = 1;
+		join = 2;
+		leave = 3;
+	}
 	uint32 id = 1;
 	string nick = 2;
-	string action = 3;
+	Actions action = 3;
+	string data = 4;
 }

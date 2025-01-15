@@ -18,7 +18,6 @@ chat_session::chat_session(asio::ip::tcp::socket socket, chat_room &room, chat_s
 }
 
 void chat_session::start() {
-	room_.join(shared_from_this(), user_info_);
 
 	asio::co_spawn(
 	    socket_.get_executor(), [self = shared_from_this()] { return self->reader(); },
@@ -32,10 +31,11 @@ void chat_session::start() {
 	    socket_.get_executor(), [self = shared_from_this()] { return self->process_messages(); },
 	    asio::detached);
 
-	std::cout << "Session started for user_info: " << user_info_.nickname << "\n";
+	std::cout << "Session started for user_info: " << user_info_.nickname << std::endl;
 }
 
 void chat_session::deliver(const std::string &msg) {
+	std::cout << "Session deliver for user_info: " << user_info_.nickname << std::endl;
 	write_msgs_.push_back(msg);
 	timer_.cancel_one();
 }
@@ -100,29 +100,79 @@ asio::awaitable<void> chat_session::process_messages() {
 	}
 }
 
-void chat_session::handle_list_rooms() {
-	std::string response = "Available rooms: ";
-	// for (const auto &[room_name, _] : chat_rooms) {
-	// 	response += room_name + ", ";
-	// }
-	deliver(response + "\n");
-}
-
-void chat_session::handle_list_user_infos() {
-	auto user_infos = room_.get_users_online();
-	std::string response = "user_infos online: ";
-	for (const auto &user_info : user_infos) {
-		response += user_info + ", ";
-	}
-	deliver(response + "\n");
-}
-
 void chat_session::stop() {
 	room_.leave(shared_from_this(), user_info_);
 	socket_.close();
 	timer_.cancel();
 	timer2_.cancel();
 
-	std::cout << "Session stopped for user_info: " << user_info_.nickname << "\n";
+	std::cout << "Session stopped for user_info: " << user_info_.nickname << std::endl;
+}
+
+template <> void chat_session::process_message(const chat_proto::Auth &msg) {
+	std::cout << "Session auth token: " << msg.token() << std::endl;
+	if (msg.token() == "super_secretny_token") {
+		user_info_.nickname = msg.nick();
+		room_.join(shared_from_this(), user_info_);
+		chat_proto::Auth ans;
+		ans.CopyFrom(msg);
+		ans.set_id(std::stoi(user_info_.id));
+		room_.deliver(serialize_packet(chat_proto::Type_Auth, ans.SerializeAsString()));
+		//@TODO send system Message user join to room
+	}
+}
+
+template <> void chat_session::process_message(const chat_proto::IM &msg) {
+	room_.deliver(serialize_packet(chat_proto::Type_IM, msg.SerializeAsString()));
+}
+
+template <> void chat_session::process_message(const chat_proto::ServiceIM &msg) {
+	std::cout << "Session action: " << msg.action() << std::endl;
+	chat_proto::ServiceIM im;
+	im.set_id(std::stoi(user_info_.id));
+	im.set_nick(user_info_.nickname);
+	im.set_action(msg.action());
+	switch (msg.action()) {
+	case chat_proto::ServiceIM_Actions_room_list: {
+		auto rooms = server_.get_avalible_room();
+		std::string buf;
+		for (const auto &val : rooms) {
+			buf.append(" - ");
+			buf.append(val);
+			buf.append("\n");
+		}
+		im.set_data(buf);
+		break;
+	}
+	case chat_proto::ServiceIM_Actions_user_list: {
+		auto users = room_.get_users_online();
+		std::string buf;
+		for (const auto &val : users) {
+			buf.append(" - ");
+			buf.append(val);
+			buf.append("\n");
+		}
+		im.set_data(buf);
+		break;
+	}
+	default:
+		break;
+	}
+	deliver(serialize_packet(chat_proto::Type_ServiceIM, im.SerializeAsString()));
+}
+
+void chat_session::pars_message(uint32_t tag, std::string &data) {
+	typedef void (chat_session::*call_parser)(const std::string &);
+	static const std::unordered_map<uint32_t, call_parser> map_hendler({
+	    {chat_proto::Type_Auth, &chat_session::pars_message<chat_proto::Auth>},
+	    {chat_proto::Type_IM, &chat_session::pars_message<chat_proto::IM>},
+	    {chat_proto::Type_ServiceIM, &chat_session::pars_message<chat_proto::ServiceIM>},
+	});
+	auto it = map_hendler.find(tag);
+	if (it != map_hendler.end()) {
+		(this->*it->second)(data);
+	} else {
+		std::cout << "There is no handler for:" << tag << std::endl;
+	}
 }
 } // namespace otus::chat_server

@@ -11,6 +11,7 @@ configure_file(version.h.in version.h)
 
 set(${PROJECT_NAME}_SRC
     src/chat_service.cpp include/chat_service.hpp
+    # src/chat_network.cpp src/chat_network.hpp
     src/chat_session.cpp src/chat_session.hpp
     src/chat_server.cpp src/chat_server.hpp
     src/chat_room.cpp src/chat_room.hpp

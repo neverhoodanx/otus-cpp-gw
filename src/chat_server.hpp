@@ -24,6 +24,10 @@ class chat_server {
 	 * @return Pointer to the room.
 	 */
 	std::shared_ptr<chat_room> get_room(const std::string &name);
+	/**
+	 *
+	 */
+	std::vector<std::string> get_avalible_room() const;
 
   private:
 	std::map<std::string, std::shared_ptr<chat_room>> chat_rooms_;

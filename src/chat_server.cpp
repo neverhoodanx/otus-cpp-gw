@@ -20,4 +20,12 @@ std::shared_ptr<chat_room> chat_server::get_room(const std::string &name) {
 	}
 	return chat_rooms_["default"];
 }
+
+std::vector<std::string> chat_server::get_avalible_room() const {
+	auto ret = std::vector<std::string>();
+	for (const auto &[key, val] : chat_rooms_) {
+		ret.push_back(key);
+	}
+	return ret;
+}
 } // namespace otus::chat_server

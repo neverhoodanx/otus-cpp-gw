@@ -59,17 +59,22 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	 */
 	asio::awaitable<void> process_messages();
 	/**
-	 * @brief Handle request for list of rooms.
-	 */
-	void handle_list_rooms();
-	/**
-	 * @brief Handle request for list of user_infos in the room.
-	 */
-	void handle_list_user_infos();
-	/**
 	 * @brief Stop a chat session for the user.
 	 */
 	void stop();
+
+	template <typename T> void process_message(const T &msg) {
+		std::cout << "unwrapped process message: " << msg.GetTypeName() << std::endl;
+	}
+
+	template <typename T> void pars_message(const std::string &data) {
+		T msg;
+		msg.ParseFromString(data);
+		std::cout << "process_message: " << msg.GetTypeName() << std::endl;
+		process_message<T>(msg);
+	}
+
+	void pars_message(uint32_t tag, std::string &data);
 
 	asio::ip::tcp::socket socket_;
 	asio::steady_timer timer_;

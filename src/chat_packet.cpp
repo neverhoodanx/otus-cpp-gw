@@ -22,19 +22,4 @@ std::string serialize_packet(uint32_t tag, std::string data) {
 	return buf;
 }
 
-typedef void (*call_parser)(const std::string &);
-void pars_message(uint32_t tag, std::string &data) {
-	static const std::unordered_map<uint32_t, call_parser> map_hendler({
-	    {chat_proto::Type_Auth, &pars_message<chat_proto::Auth>},
-	    {chat_proto::Type_IM, &pars_message<chat_proto::IM>},
-	    {chat_proto::Type_ServiceIM, &pars_message<chat_proto::ServiceIM>},
-	});
-	auto it = map_hendler.find(tag);
-	if (it != map_hendler.end()) {
-		(*it->second)(data);
-	} else {
-		std::cout << "There is no handler for:" << tag << std::endl;
-	}
-}
-
 } // namespace otus::chat_server

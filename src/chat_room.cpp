@@ -13,25 +13,25 @@ void chat_room::join(std::shared_ptr<chat_participant> participant, const user_i
 	for (auto msg : recent_msgs_)
 		participant->deliver(msg);
 
-	std::cout << "user_info " << user_info.nickname << " joined the room.\n";
+	std::cout << "user_info " << user_info.nickname << " joined the room." << std::endl;
 }
 
 void chat_room::leave(std::shared_ptr<chat_participant> participant, const user_info &user_info) {
 	participants_.erase(participant);
 	user_infos_.erase(user_info.nickname);
 
-	std::cout << "user_info " << user_info.nickname << " left the room.\n";
+	std::cout << "user_info " << user_info.nickname << " left the room." << std::endl;
 }
 
 void chat_room::deliver(const std::string &msg) {
 	recent_msgs_.push_back(msg);
-	while (recent_msgs_.size() > max_recent_msgs)
+	while (recent_msgs_.size() > max_recent_msgs) {
 		recent_msgs_.pop_front();
-
-	for (auto participant : participants_)
+	}
+	for (auto participant : participants_) {
 		participant->deliver(msg);
-
-	std::cout << "Delivered message: " << msg << ";\n";
+	}
+	std::cout << "Delivered message: " << msg << std::endl;
 }
 
 std::set<std::string> chat_room::get_users_online() const {
