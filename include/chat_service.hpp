@@ -11,6 +11,6 @@ namespace otus::chat_server {
 
 void start(uint16_t port);
 
-void stop(); 
+void stop();
 
 } // namespace otus::chat_server

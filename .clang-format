@@ -1,7 +1,7 @@
 ﻿---
 BasedOnStyle: LLVM
 AllowShortFunctionsOnASingleLine: InlineOnly
-ColumnLimit: '80'
+ColumnLimit: '100'
 IndentWidth: '4'
 TabWidth: '4'
 UseTab: ForIndentation

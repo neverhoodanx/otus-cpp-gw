@@ -10,13 +10,14 @@ option(WITH_CLIENT_TEST "Build test client" ON)
 configure_file(version.h.in version.h)
 
 set(${PROJECT_NAME}_SRC
-	src/chat_service.cpp include/chat_service.hpp
+    src/chat_service.cpp include/chat_service.hpp
     src/chat_session.cpp src/chat_session.hpp
     src/chat_server.cpp src/chat_server.hpp
     src/chat_room.cpp src/chat_room.hpp
+    src/chat_packet.cpp src/chat_packet.hpp
     src/chat_participant.hpp
     src/user_info.hpp
-) 
+)
 
 add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SRC})
 set_target_properties(${PROJECT_NAME} ${PROJECT_NAME} PROPERTIES
@@ -34,7 +35,7 @@ set_target_properties(${PROJECT_NAME}_srv ${PROJECT_NAME} PROPERTIES
 )
 target_link_libraries(${PROJECT_NAME}_srv PRIVATE ${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME}_cli client.cpp)
+add_executable(${PROJECT_NAME}_cli client.cpp src/chat_packet.cpp)
 set_target_properties(${PROJECT_NAME}_cli ${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
@@ -51,14 +52,18 @@ target_link_libraries(${PROJECT_NAME}_cli PUBLIC asio::asio)
 
 add_subdirectory(proto)
 
-if (MSVC)
+target_link_libraries(${PROJECT_NAME} PUBLIC chat_server_packets)
+target_link_libraries(${PROJECT_NAME}_cli PUBLIC chat_server_packets)
+
+
+if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
         /W4
     )
     target_compile_options(${PROJECT_NAME}_srv PRIVATE
         /W4
     )
-else ()
+else()
     target_compile_options(${PROJECT_NAME} PRIVATE
         -Wall -Wextra -pedantic -Werror
     )

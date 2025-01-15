@@ -11,11 +11,12 @@
 //     }
 
 //     // Пример функции для вставки сообщений
-//     void save_message(const std::string& channel, const std::string& user, const std::string& message) {
+//     void save_message(const std::string& channel, const std::string& user, const std::string&
+//     message) {
 //         std::string sql = "INSERT INTO messages (channel, user, message) VALUES (?, ?, ?);";
 //         sqlite3_stmt *stmt;
 //         sqlite3_prepare_v2(db_, sql.c_str(), -1, &stmt, nullptr);
-//         sqlite3_bind_text(stmt, 1, channel.c_str(), -1, SQLITE_STATIC);
+//         sqlite3_bind_text(ßstmt, 1, channel.c_str(), -1, SQLITE_STATIC);
 //         sqlite3_bind_text(stmt, 2, user.c_str(), -1, SQLITE_STATIC);
 //         sqlite3_bind_text(stmt, 3, message.c_str(), -1, SQLITE_STATIC);
 

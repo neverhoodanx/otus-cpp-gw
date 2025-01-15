@@ -1,7 +1,7 @@
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS chat_messages.proto )
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS chat_messages.proto)
 
-add_library(chat_server_packets OBJECT ${LIBRARY_SOURCES} ${PROTO_SRCS} chat_messages.proto )
+add_library(chat_server_packets OBJECT ${LIBRARY_SOURCES} ${PROTO_SRCS} chat_messages.proto)
 # set_target_properties(chat_server_packets PROPERTIES FOLDER ${NWSDK_PROJECTS_FOLDER})
 
 target_include_directories(chat_server_packets
