@@ -14,6 +14,9 @@ class MockParticipant : public otus::chat_server::chat_participant {
 };
 
 class ChatRoomTest : public ::testing::Test {
+  public:
+	ChatRoomTest() : room(otus::chat_server::chat_room("")) {};
+
   protected:
 	otus::chat_server::chat_room room;
 	std::shared_ptr<MockParticipant> participant;

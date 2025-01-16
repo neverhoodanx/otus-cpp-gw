@@ -9,9 +9,9 @@
 namespace otus::chat_server {
 chat_server::chat_server() {
 	// Create and add predefined rooms
-	chat_rooms_["default"] = std::make_shared<chat_room>();
-	chat_rooms_["room1"] = std::make_shared<chat_room>();
-	chat_rooms_["room2"] = std::make_shared<chat_room>();
+	chat_rooms_["default"] = std::make_shared<chat_room>("default");
+	chat_rooms_["room1"] = std::make_shared<chat_room>("room1");
+	chat_rooms_["room2"] = std::make_shared<chat_room>("room2");
 }
 
 std::shared_ptr<chat_room> chat_server::get_room(const std::string &name) {

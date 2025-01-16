@@ -1,5 +1,6 @@
 #define ASIO_HAS_CO_AWAIT
 
+#include "src/chat_packet.hpp"
 #include <asio.hpp>
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
@@ -7,44 +8,62 @@
 #include <asio/read_until.hpp>
 #include <asio/use_awaitable.hpp>
 #include <iostream>
+#include <sstream>
 #include <string>
 
-#include "src/chat_packet.hpp"
-
 #include <memory>
+
+std::vector<std::string> split_string_words(const std::string &input) {
+	std::istringstream stream(input);
+	std::vector<std::string> words;
+	std::string word;
+
+	while (stream >> word) {
+		words.push_back(word);
+	}
+
+	return words;
+}
 
 std::shared_ptr<asio::ip::tcp::socket> sk;
 
 void read_console_input(asio::io_context &io_context, const std::string &nickname) {
 	try {
-		for (std::string line; std::getline(std::cin, line);) {
-			if (line.empty()) {
+		for (std::string rline; std::getline(std::cin, rline);) {
+			if (rline.empty()) {
 				continue;
 			}
-			asio::post(io_context, [buf = line, nickname]() mutable {
+			asio::post(io_context, [buf = rline, nickname]() mutable {
 				std::cout << nickname << "(me): " << buf << std::endl;
 				std::cout << std::flush;
 			});
 			std::string buf;
-			if (line == "/room_list") {
+			std::vector<std::string> commands;
+			if (rline[0] == '/') {
+				commands = split_string_words(rline);
+			} else {
+				commands.push_back("");
+			}
+			if (commands[0] == "/room_list") {
 				chat_proto::ServiceIM sim;
 				sim.set_action(chat_proto::ServiceIM_Actions_room_list);
 				sim.set_nick(nickname);
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
 				                                          sim.SerializeAsString());
-			} else if (line == "/user_list") {
+			} else if (commands[0] == "/user_list") {
 				chat_proto::ServiceIM sim;
 				sim.set_action(chat_proto::ServiceIM_Actions_user_list);
 				sim.set_nick(nickname);
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
 				                                          sim.SerializeAsString());
-			} else if (line == "/join") {
+			} else if (commands[0] == "/join") {
 				chat_proto::ServiceIM sim;
 				sim.set_action(chat_proto::ServiceIM_Actions_join);
 				sim.set_nick(nickname);
+				sim.set_data(commands[1]);
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
 				                                          sim.SerializeAsString());
-			} else if (line == "/leave") {
+			} else if (commands[0] == "/leave") {
 				chat_proto::ServiceIM sim;
 				sim.set_action(chat_proto::ServiceIM_Actions_leave);
 				sim.set_nick(nickname);
@@ -53,7 +72,7 @@ void read_console_input(asio::io_context &io_context, const std::string &nicknam
 			} else {
 				chat_proto::IM msg;
 				msg.set_nick(nickname);
-				msg.set_message(line);
+				msg.set_message(rline);
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_IM,
 				                                          msg.SerializeAsString());
 			}

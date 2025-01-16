@@ -32,16 +32,4 @@ struct packet {
  */
 std::string serialize_packet(uint32_t tag, std::string data);
 
-template <typename T> void process_message(const T &msg) {
-	std::cout << "process_message: " << msg.GetTypeName() << std::endl;
-}
-
-template <typename T> void pars_message(const std::string &data) {
-	T msg;
-	msg.ParseFromString(data);
-	process_message<T>(msg);
-}
-
-void pars_message(uint32_t tag, std::string &data);
-
 } // namespace otus::chat_server

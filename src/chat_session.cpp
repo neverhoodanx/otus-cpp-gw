@@ -155,6 +155,23 @@ template <> void chat_session::process_message(const chat_proto::ServiceIM &msg)
 		im.set_data(buf);
 		break;
 	}
+	case chat_proto::ServiceIM_Actions_join: {
+		std::cout << "Session action data: " << msg.data() << std::endl;
+		room_.leave(shared_from_this(), user_info_);
+		auto r = server_.get_room(msg.data());
+		room_ = *r;
+		room_.join(shared_from_this(), user_info_);
+		im.set_data(msg.data()); //@TODO set room name from current room; it can bi default
+		break;
+	}
+	case chat_proto::ServiceIM_Actions_leave: {
+		room_.leave(shared_from_this(), user_info_);
+		auto r = server_.get_room("default");
+		room_ = *r;
+		room_.join(shared_from_this(), user_info_);
+		im.set_data(msg.data()); //@TODO set room name from current room; it can bi default
+		break;
+	}
 	default:
 		break;
 	}

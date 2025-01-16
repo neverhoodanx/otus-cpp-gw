@@ -19,6 +19,10 @@ namespace otus::chat_server {
 class chat_room {
   public:
 	/**
+	 * @brief Ctor
+	 */
+	explicit chat_room(std::string name);
+	/**
 	 * @brief Add participant to the room.
 	 * @param participant Pointer to the participant.
 	 * @param user_info The user_info structure.
@@ -49,5 +53,6 @@ class chat_room {
 	std::set<std::string> user_infos_;
 	enum { max_recent_msgs = 100 };
 	std::deque<std::string> recent_msgs_;
+	std::string name_;
 };
 } // namespace otus::chat_server
