@@ -31,6 +31,7 @@ class chat_server {
 
   private:
 	std::map<std::string, std::shared_ptr<chat_room>> chat_rooms_;
+	std::map<std::string, uint32_t> chat_users_;
 };
 
 } // namespace otus::chat_server

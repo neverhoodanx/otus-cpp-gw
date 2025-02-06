@@ -108,6 +108,7 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
 			}
 			std::size_t n_h = asio::read(socket, asio::dynamic_buffer(p.data_, 2048),
 			                             asio::transfer_exactly(p.header_.length_));
+			std::cout << "tets" << std::endl;
 			if (p.header_.tag_ == chat_proto::Type_IM) {
 				chat_proto::IM msg;
 				msg.ParseFromString(p.data_);
@@ -140,6 +141,11 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
 				}
 				case chat_proto::ServiceIM_Actions_user_list: {
 					std::cout << "[server] /user_list: \n" << msg.data() << std::endl;
+					std::cout << std::flush;
+					break;
+				}
+				case chat_proto::ServiceIM_Actions_join: {
+					std::cout << "[server] /join: \n" << msg.data() << std::endl;
 					std::cout << std::flush;
 					break;
 				}

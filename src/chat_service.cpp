@@ -35,7 +35,7 @@ asio::awaitable<void> listener(asio::ip::tcp::acceptor acceptor, chat_server &se
 		// Select room
 		auto room = server.get_room("default");
 
-		std::make_shared<chat_session>(std::move(socket), *room, server, user)->start();
+		std::make_shared<chat_session>(std::move(socket), room, server, user)->start();
 	}
 }
 

@@ -9,10 +9,10 @@
 #include <asio.hpp>
 
 namespace otus::chat_server {
-chat_session::chat_session(asio::ip::tcp::socket socket, chat_room &room, chat_server &server,
-                           const user_info &user_info)
+chat_session::chat_session(asio::ip::tcp::socket socket, std::shared_ptr<chat_room> room,
+                           chat_server &server, const user_info &user_info)
     : socket_(std::move(socket)), timer_(socket_.get_executor()), timer2_(socket_.get_executor()),
-      room_(room), server_(server), user_info_(user_info) {
+      room_(std::move(room)), server_(server), user_info_(user_info) {
 	timer_.expires_at(std::chrono::steady_clock::time_point::max());
 	timer2_.expires_at(std::chrono::steady_clock::time_point::max());
 }
@@ -35,7 +35,8 @@ void chat_session::start() {
 }
 
 void chat_session::deliver(const std::string &msg) {
-	std::cout << "Session deliver for user_info: " << user_info_.nickname << std::endl;
+	std::cout << "Session deliver for user_info: " << user_info_.nickname << " " << msg
+	          << std::endl;
 	write_msgs_.push_back(msg);
 	timer_.cancel_one();
 }
@@ -101,7 +102,7 @@ asio::awaitable<void> chat_session::process_messages() {
 }
 
 void chat_session::stop() {
-	room_.leave(shared_from_this(), user_info_);
+	room_->leave(shared_from_this(), user_info_);
 	socket_.close();
 	timer_.cancel();
 	timer2_.cancel();
@@ -113,17 +114,17 @@ template <> void chat_session::process_message(const chat_proto::Auth &msg) {
 	std::cout << "Session auth token: " << msg.token() << std::endl;
 	if (msg.token() == "super_secretny_token") {
 		user_info_.nickname = msg.nick();
-		room_.join(shared_from_this(), user_info_);
+		room_->join(shared_from_this(), user_info_);
 		chat_proto::Auth ans;
 		ans.CopyFrom(msg);
 		ans.set_id(std::stoi(user_info_.id));
-		room_.deliver(serialize_packet(chat_proto::Type_Auth, ans.SerializeAsString()));
+		room_->deliver(serialize_packet(chat_proto::Type_Auth, ans.SerializeAsString()));
 		//@TODO send system Message user join to room
 	}
 }
 
 template <> void chat_session::process_message(const chat_proto::IM &msg) {
-	room_.deliver(serialize_packet(chat_proto::Type_IM, msg.SerializeAsString()));
+	room_->deliver(serialize_packet(chat_proto::Type_IM, msg.SerializeAsString()));
 }
 
 template <> void chat_session::process_message(const chat_proto::ServiceIM &msg) {
@@ -145,7 +146,7 @@ template <> void chat_session::process_message(const chat_proto::ServiceIM &msg)
 		break;
 	}
 	case chat_proto::ServiceIM_Actions_user_list: {
-		auto users = room_.get_users_online();
+		auto users = room_->get_users_online();
 		std::string buf;
 		for (const auto &val : users) {
 			buf.append(" - ");
@@ -157,18 +158,18 @@ template <> void chat_session::process_message(const chat_proto::ServiceIM &msg)
 	}
 	case chat_proto::ServiceIM_Actions_join: {
 		std::cout << "Session action data: " << msg.data() << std::endl;
-		room_.leave(shared_from_this(), user_info_);
+		room_->leave(shared_from_this(), user_info_);
 		auto r = server_.get_room(msg.data());
-		room_ = *r;
-		room_.join(shared_from_this(), user_info_);
+		room_ = r;
+		room_->join(shared_from_this(), user_info_);
 		im.set_data(msg.data()); //@TODO set room name from current room; it can bi default
 		break;
 	}
 	case chat_proto::ServiceIM_Actions_leave: {
-		room_.leave(shared_from_this(), user_info_);
+		room_->leave(shared_from_this(), user_info_);
 		auto r = server_.get_room("default");
-		room_ = *r;
-		room_.join(shared_from_this(), user_info_);
+		room_ = r;
+		room_->join(shared_from_this(), user_info_);
 		im.set_data(msg.data()); //@TODO set room name from current room; it can bi default
 		break;
 	}

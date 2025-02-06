@@ -32,7 +32,7 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	/**
 	 * @brief Ctor
 	 */
-	chat_session(asio::ip::tcp::socket socket, chat_room &room, chat_server &server,
+	chat_session(asio::ip::tcp::socket socket, std::shared_ptr<chat_room> room, chat_server &server,
 	             const user_info &user_info);
 	/**
 	 * @brief Start a chat session for the user.
@@ -55,7 +55,7 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	 */
 	asio::awaitable<void> writer();
 	/**
-	 * @brief Handle writer.
+	 * @brief Process proto message
 	 */
 	asio::awaitable<void> process_messages();
 	/**
@@ -79,7 +79,7 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	asio::ip::tcp::socket socket_;
 	asio::steady_timer timer_;
 	asio::steady_timer timer2_;
-	chat_room &room_;
+	std::shared_ptr<chat_room> room_;
 	chat_server &server_;
 	user_info user_info_;
 	std::deque<std::string> write_msgs_;

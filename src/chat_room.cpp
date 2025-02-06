@@ -42,4 +42,9 @@ void chat_room::deliver(const std::string &msg) {
 std::set<std::string> chat_room::get_users_online() const {
 	return user_infos_;
 }
+
+const std::string &chat_room::get_name() const {
+	return name_;
+}
+
 } // namespace otus::chat_server

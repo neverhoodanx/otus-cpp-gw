@@ -48,6 +48,12 @@ class chat_room {
 	 */
 	std::set<std::string> get_users_online() const;
 
+	/**
+	 * @brief Get a room name
+	 * @return room name
+	 */
+	const std::string &get_name() const;
+
   private:
 	std::set<std::shared_ptr<chat_participant>> participants_;
 	std::set<std::string> user_infos_;
