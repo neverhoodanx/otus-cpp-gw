@@ -10,6 +10,11 @@ enum Types_Chat {
 	Type_Auth= 0; /// @see Auth/OnAuth
 	Type_IM = 1; /// @see IM
 	Type_ServiceIM = 2; /// @see ServiceIM
+	Type_WhisperIM = 3; ///
+	Type_RoomList = 4; ///
+	Type_UserList = 5;
+	Type_RoomJoin = 6;
+	Type_RoomLeft = 7;
 }
 
 /**
@@ -28,6 +33,35 @@ message IM {
 	uint32 id = 1;
 	string nick = 2;
 	string message = 3;
+}
+
+message WhisperIM {
+
+}
+
+message RoomList {
+
+}
+
+message UserList {
+	
+}
+
+message RoomJoin {
+
+}
+
+message RoomLeft {
+	
+}
+
+message ServerMaintenance {
+	enum error_codes {
+		ec_restart = 0;
+		ec_shutdown = 1;
+	}
+	error_codes error_code = 1;
+	string message = 2;
 }
 
 /**

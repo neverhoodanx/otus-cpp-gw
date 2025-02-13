@@ -8,6 +8,7 @@
 #include "chat_participant.hpp"
 #include "user_info.hpp"
 
+#include <deque>
 #include <iostream>
 #include <memory>
 #include <set>
