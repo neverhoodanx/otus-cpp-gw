@@ -8,6 +8,7 @@
 #include "chat_room.hpp"
 
 #include <map>
+#include <vector>
 
 namespace otus::chat_server {
 

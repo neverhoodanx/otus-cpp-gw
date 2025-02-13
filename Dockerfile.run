@@ -1,0 +1,11 @@
+# Базовый образ для запуска
+FROM ubuntu:22.04
+
+# Копирование собранного исполняемого файла из образа сборки
+COPY --from=my-server-builder:latest /app/build_linux/build/message_service_srv /usr/local/bin/message_service
+
+# Открытие порта для сетевого сервера
+EXPOSE 9090
+
+# Запуск сервера
+CMD ["message_service", "9090"]
