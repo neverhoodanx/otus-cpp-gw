@@ -4,83 +4,121 @@ option optimize_for = LITE_RUNTIME;
 package chat_proto;
 
 /**
- * Base events types for chat server
+ * Base event types for the chat server.
+ * Each event type corresponds to a specific action or message in the system.
  */
 enum Types_Chat {
-	Type_Auth= 0; /// @see Auth/OnAuth
-	Type_IM = 1; /// @see IM
-	Type_ServiceIM = 2; /// @see ServiceIM
-	Type_WhisperIM = 3; ///
-	Type_GetRoomList = 4; ///
-	Type_RoomList = 5; ///
-	Type_GetUserList = 6;
-	Type_UserList = 7;
-	Type_RoomJoin = 8;
-	Type_RoomLeft = 9;
-	Type_ServerMaintenance = 10;
-}
-
-message User {
-	uint32 id = 1;
-	string nick = 2;
+    Type_Auth = 0; /// User authentication
+    Type_IM = 1; /// Regular text message in the chat
+    Type_ServiceIM = 2; /// System message from the server
+    Type_WhisperIM = 3; /// Private message between users
+    Type_GetRoomList = 4; /// Request for a list of available rooms
+    Type_RoomList = 5; /// Response with a list of available rooms
+    Type_GetUserList = 6; /// Request for a list of users in a room
+    Type_UserList = 7; /// Response with a list of users in a room
+    Type_RoomJoin = 8; /// Notification about a user joining a room
+    Type_RoomLeft = 9; /// Notification about a user leaving a room
+    Type_ServerMaintenance = 10; /// Notification about server maintenance
 }
 
 /**
- * 
+ * A user in the system
+ * Contains basic information about the user
+ */
+message User {
+    string id = 1; /// Unique identifier of the user
+    string nick = 2; /// Display name of the user
+}
+
+/**
+ * Message for user authentication
+ * Used to transmit user information and an authentication token
  */
 message Auth {
-	User user = 1;
-	bytes token = 3;
+    User user = 1; /// Information about the user
+    bytes token = 3; /// Authentication token for verification
 }
 
 /**
- * 
+ * Message for sending a text message in the chat
  */
 message IM {
-	User user = 1;
-	string message = 3;
-}
-
-message WhisperIM {
-	User user_from = 1;
-	User user_to = 2;
-	string message = 3;
-}
-
-message GetRoomList {
-}
-
-message RoomList {
-	repeated string room_names = 1;
-}
-
-message GetUserList {
-}
-
-message UserList {
-	repeated User users = 1;
-}
-
-message RoomJoin {
-	string room_name = 1;
-}
-
-message RoomLeft {
-	string room_name = 1;
-}
-
-message ServerMaintenance {
-	enum error_codes {
-		ec_restart = 0;
-		ec_shutdown = 1;
-	}
-	error_codes error_code = 1;
-	string message = 2;
+    User user = 1; /// Information about the user who sent the message
+    string message = 3; /// The text of the message
 }
 
 /**
- * 
+ * Message for sending a private message between users
+ */
+message WhisperIM {
+    User user_from = 1; /// Information about the user who sent the message
+    User user_to = 2; /// Information about the recipient user
+    string message = 3; /// The text of the private message
+}
+
+/**
+ * Request for a list of available rooms
+ */
+message GetRoomList {}
+
+/**
+ * Response with a list of available rooms
+ */
+message RoomList {
+    repeated string room_names = 1; /// List of room names
+}
+
+/**
+ * Request for a list of users in a room
+ */
+message GetUserList {}
+
+/**
+ * Response with a list of users in a room
+ */
+message UserList {
+    repeated User users = 1; /// List of users in the room
+}
+
+/**
+ * Notification about a user joining a room
+ */
+message RoomJoin {
+    string room_name = 1; /// Name of the room the user joined
+}
+
+/**
+ * Notification about a user leaving a room
+ */
+message RoomLeft {
+    string room_name = 1; /// Name of the room the user left
+}
+
+/**
+ * Notification about server maintenance
+ */
+message ServerMaintenance {
+    /**
+     * Error codes during server maintenance
+     */
+    enum error_codes {
+        ec_restart = 0; /// The server will be restarted
+        ec_shutdown = 1; /// The server will be shut down
+    }
+    error_codes error_code = 1; /// Error code.
+    string message = 2; /// human-readable message
+}
+
+/**
+ * System message from the server
  */
 message ServiceIM {
-	string message = 1;
+    /**
+     * Error codes for system messages
+     */
+    enum error_codes {
+        ec_auth_falied = 0; /// Authentication failed
+    }
+    error_codes error_code = 1; /// Error code.
+    string message = 2; /// Human-readable message
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
-set(PROJECT_VESRION 0.1.${PATCH_VERSION})
+set(PROJECT_VESRION 1.1.${PATCH_VERSION})
 
 project(message_service VERSION ${PROJECT_VESRION})
 
@@ -11,12 +11,13 @@ configure_file(version.h.in version.h)
 
 set(${PROJECT_NAME}_SRC
     src/chat_service.cpp include/chat_service.hpp
-    # src/chat_network.cpp src/chat_network.hpp
+    src/chat_network.cpp src/chat_network.hpp
     src/chat_session.cpp src/chat_session.hpp
     src/chat_server.cpp src/chat_server.hpp
     src/chat_room.cpp src/chat_room.hpp
     src/chat_packet.cpp src/chat_packet.hpp
     src/chat_participant.hpp
+    src/user_service.cpp src/user_service.hpp
     src/user_info.hpp
 )
 

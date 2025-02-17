@@ -12,23 +12,36 @@
 namespace otus::chat_server {
 
 /**
- * @brief
+ * @struct header
+ * @brief Represents the header of a network packet
+ *
+ * The header contains a tag and the length of the packet data
  */
 struct header {
-	uint32_t tag_;
-	uint32_t length_;
+	uint32_t tag_;    ///< Tag identifying the packet type
+	uint32_t length_; ///< Length of the data in the packet
 };
 
 /**
- * @brief
+ * @struct packet
+ * @brief Represents a complete network packet.
+ *
+ * A packet consists of a header and a data payload
  */
 struct packet {
-	header header_;
-	std::string data_;
+	header header_;    ///< Packet header containing metadata
+	std::string data_; ///< Packet data payload
 };
 
 /**
- * @brief
+ * @brief Serializes a packet into a string format
+ *
+ * This function constructs a packet with the given tag and data, then serializes it
+ * into a string buffer for transmission
+ *
+ * @param tag The tag identifying the packet type
+ * @param data The payload data
+ * @return std::string The serialized packet data
  */
 std::string serialize_packet(uint32_t tag, std::string data);
 

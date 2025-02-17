@@ -27,7 +27,8 @@ std::vector<std::string> split_string_words(const std::string &input) {
 
 std::shared_ptr<asio::ip::tcp::socket> sk;
 
-void read_console_input(asio::io_context &io_context, const std::string &nickname) {
+void read_console_input(asio::io_context &io_context, const std::string &nickname,
+                        const std::string &token) {
 	try {
 		for (std::string rline; std::getline(std::cin, rline);) {
 			if (rline.empty()) {
@@ -71,11 +72,18 @@ void read_console_input(asio::io_context &io_context, const std::string &nicknam
 				msg.set_message(rline.substr(sz));
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_WhisperIM,
 				                                          msg.SerializeAsString());
+			} else if (commands[0] == "/help") {
+				std::cout << "Supported command: \n"
+				          << "- /room_list\n"
+				          << "- /user_list\n"
+				          << "- /join <room_name>\n"
+				          << "- /leave\n"
+				          << "- /whisper <nickname>\n";
 			} else {
 				chat_proto::IM msg;
 				auto user = msg.mutable_user();
 				user->set_nick(nickname);
-				user->set_id(-1);
+				user->set_id("-1");
 				msg.set_message(rline);
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_IM,
 				                                          msg.SerializeAsString());
@@ -175,6 +183,15 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
 				          << std::endl;
 				continue;
 			}
+			if (p.header_.tag_ == chat_proto::Type_ServiceIM) {
+				chat_proto::ServiceIM msg;
+				msg.ParseFromString(p.data_);
+				auto str = msg.error_code() == chat_proto::ServiceIM_error_codes_ec_auth_falied
+				               ? "Auth failed!"
+				               : "Unknown errod";
+				std::cout << "[Service] " << str << ": " << msg.message() << std::endl;
+				continue;
+			}
 		}
 	} catch (const std::exception &e) {
 		std::cerr << "Error in read_messages: " << e.what() << "\n";
@@ -186,12 +203,13 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
  * @param socket The socket connected to the server.
  * @param nickname The user's nickname.
  */
-asio::awaitable<void> write_messages(asio::ip::tcp::socket &socket, const std::string &nickname) {
+asio::awaitable<void> write_messages(asio::ip::tcp::socket &socket, const std::string &nickname,
+                                     const std::string &token) {
 	try {
 		chat_proto::Auth msg;
 		auto user = msg.mutable_user();
 		user->set_nick(nickname);
-		msg.set_token("super_secretny_token");
+		msg.set_token(token);
 		auto buf =
 		    otus::chat_server::serialize_packet(chat_proto::Type_Auth, msg.SerializeAsString());
 		co_await asio::async_write(socket, asio::buffer(buf), asio::use_awaitable);
@@ -208,7 +226,7 @@ asio::awaitable<void> write_messages(asio::ip::tcp::socket &socket, const std::s
  * @param port Server's host port.
  */
 asio::awaitable<void> client(const std::string &nickname, const std::string &host,
-                             const std::string &port) {
+                             const std::string &port, const std::string &token) {
 	asio::ip::tcp::resolver resolver(co_await asio::this_coro::executor);
 	auto endpoints = co_await resolver.async_resolve(host, port, asio::use_awaitable);
 	sk = std::make_shared<asio::ip::tcp::socket>(co_await asio::this_coro::executor);
@@ -219,25 +237,25 @@ asio::awaitable<void> client(const std::string &nickname, const std::string &hos
 	          << ". You can start typing messages...\n";
 
 	asio::co_spawn((*sk.get()).get_executor(), read_messages(*sk.get(), nickname), asio::detached);
-	co_await write_messages(*sk.get(), nickname);
+	co_await write_messages(*sk.get(), nickname, token);
 }
 
 int main(int argc, char *argv[]) {
 	try {
-		if (argc != 4) {
-			std::cerr << "Usage: chat_client <nickname> <host> <port>\n";
+		if (argc != 5) {
+			std::cerr << "Usage: chat_client <nickname> <password> <host> <port>\n";
 			return 1;
 		}
 
 		asio::io_context io_context;
 
 		std::string nickname = argv[1];
-		std::string host = argv[2];
-		std::string port = argv[3];
-
-		asio::co_spawn(io_context, client(nickname, host, port), asio::detached);
+		std::string token = argv[2];
+		std::string host = argv[3];
+		std::string port = argv[4];
+		asio::co_spawn(io_context, client(nickname, host, port, token), asio::detached);
 		std::thread input_thread(
-		    [&io_context, nickname]() { read_console_input(io_context, nickname); });
+		    [&io_context, nickname, token]() { read_console_input(io_context, nickname, token); });
 		io_context.run();
 		input_thread.join();
 	} catch (const std::exception &e) {

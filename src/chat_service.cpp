@@ -5,6 +5,7 @@
  */
 
 #include "chat_service.hpp"
+#include "chat_network.hpp"
 #include "chat_server.hpp"
 #include "chat_session.hpp"
 #include "user_info.hpp"
@@ -13,41 +14,49 @@
 #include <asio/steady_timer.hpp>
 
 namespace otus::chat_server {
-
-unsigned int chat_session::user_id_counter = 0;
-
-std::unique_ptr<chat_server> server_;
+/**
+ * @brief Counter for generating unique user IDs.
+ */
+static unsigned int user_id_counter = 0;
+/**
+ * @brief Pointer to the chat server instance.
+ */
+std::shared_ptr<chat_server> server_;
 
 /**
- * @brief Asynchronous listener for accepting incoming connections.
- * @param acceptor The socket acceptor.
- * @param server The chat server.
+ * @brief Asynchronous listener for accepting incoming client connections.
+ *
+ * This function runs in a loop, continuously accepting new client connections.
+ * Each accepted connection is assigned a unique user ID and added to the default chat room.
+ *
+ * @param acceptor The socket acceptor used to listen for new connections.
+ * @param server Chat server instance managing the connections.
  */
-asio::awaitable<void> listener(asio::ip::tcp::acceptor acceptor, chat_server &server) {
+asio::awaitable<void> listener(asio::ip::tcp::acceptor acceptor,
+                               std::shared_ptr<chat_server> server) {
 	for (;;) {
 		auto socket = co_await acceptor.async_accept(asio::use_awaitable);
 
 		// Retrieve user data
-		std::string nickname = "User" + std::to_string(chat_session::user_id_counter);
-		std::string id = std::to_string(chat_session::user_id_counter++);
-		user_info user{nickname, id};
+		std::string nickname = "";
+		std::string id = std::to_string(user_id_counter++);
+		user_info user{nickname, id, ""};
 
-		std::cout << "New user connected: " << nickname << " with ID: " << id << "\n";
+		std::cout << "New user is connecting..." << std::endl;
 
-		// Select room
-		auto room = server.get_room("default");
-
-		std::make_shared<chat_session>(std::move(socket), room, server, user)->start();
+		// Select defaut room
+		auto room = server->get_room("default");
+		auto net = std::make_shared<chat_network>(std::move(socket));
+		std::make_shared<chat_session>(net, room, server, user)->start();
 	}
 }
 
 void start(uint16_t port) {
 	asio::io_context io_context(1);
-	server_ = std::make_unique<chat_server>();
-	co_spawn(
-	    io_context,
-	    listener(asio::ip::tcp::acceptor(io_context, {asio::ip::tcp::v4(), port}), *server_.get()),
-	    asio::detached);
+	server_ = std::make_shared<chat_server>();
+	co_spawn(io_context,
+	         listener(asio::ip::tcp::acceptor(io_context, {asio::ip::tcp::v4(), port}), server_),
+	         asio::detached);
 
 	asio::signal_set signals(io_context, SIGINT, SIGTERM);
 	signals.async_wait([&](auto, auto) {

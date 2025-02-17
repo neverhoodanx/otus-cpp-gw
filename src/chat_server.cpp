@@ -43,4 +43,9 @@ void chat_server::stop(bool graceful) {
 	}
 }
 
+user_info chat_server::auth(const std::string &nick, const std::string &id,
+                            const std::string &token) {
+	return user_service_.get_cached_user(nick, id, token);
+}
+
 } // namespace otus::chat_server

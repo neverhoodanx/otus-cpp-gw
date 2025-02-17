@@ -3,7 +3,10 @@ cmake_minimum_required(VERSION 3.24)
 project(test_chat_server CXX)
 
 set(${PROJECT_NAME}_SRC
-    test_hello.cpp
+    test_chat_pcaket.cpp
+    test_chat_room.cpp
+    test_chat_server.cpp
+    test_user_service.cpp
 )
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SRC})
