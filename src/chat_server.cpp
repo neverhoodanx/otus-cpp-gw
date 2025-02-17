@@ -5,6 +5,8 @@
  */
 
 #include "chat_server.hpp"
+#include "chat_messages.pb.h"
+#include "chat_packet.hpp"
 
 namespace otus::chat_server {
 chat_server::chat_server() {
@@ -28,4 +30,17 @@ std::vector<std::string> chat_server::get_avalible_room() const {
 	}
 	return ret;
 }
+
+void chat_server::stop(bool graceful) {
+	if (!graceful) {
+		return;
+	}
+	for (const auto &[key, val] : chat_rooms_) {
+		auto msg = chat_proto::ServerMaintenance();
+		msg.set_error_code(chat_proto::ServerMaintenance_error_codes_ec_shutdown);
+		msg.set_message("The server is temporarily suspended, please contact the administrator.");
+		val->deliver(serialize_packet(chat_proto::Type_ServerMaintenance, msg.SerializeAsString()));
+	}
+}
+
 } // namespace otus::chat_server

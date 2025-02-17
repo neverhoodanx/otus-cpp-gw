@@ -13,7 +13,6 @@ int main(int argc, char *argv[]) {
 			std::cerr << "Usage: chat_server <port>\n";
 			return 1;
 		}
-
 		uint16_t port = std::atoi(argv[1]);
 		otus::chat_server::start(port);
 	} catch (std::exception &e) {

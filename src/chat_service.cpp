@@ -16,6 +16,8 @@ namespace otus::chat_server {
 
 unsigned int chat_session::user_id_counter = 0;
 
+std::unique_ptr<chat_server> server_;
+
 /**
  * @brief Asynchronous listener for accepting incoming connections.
  * @param acceptor The socket acceptor.
@@ -41,10 +43,11 @@ asio::awaitable<void> listener(asio::ip::tcp::acceptor acceptor, chat_server &se
 
 void start(uint16_t port) {
 	asio::io_context io_context(1);
-	chat_server server;
-	co_spawn(io_context,
-	         listener(asio::ip::tcp::acceptor(io_context, {asio::ip::tcp::v4(), port}), server),
-	         asio::detached);
+	server_ = std::make_unique<chat_server>();
+	co_spawn(
+	    io_context,
+	    listener(asio::ip::tcp::acceptor(io_context, {asio::ip::tcp::v4(), port}), *server_.get()),
+	    asio::detached);
 
 	asio::signal_set signals(io_context, SIGINT, SIGTERM);
 	signals.async_wait([&](auto, auto) {
@@ -57,6 +60,7 @@ void start(uint16_t port) {
 }
 
 void stop() {
+	server_->stop(true);
 	std::cout << "Chat server is stopped..." << std::endl;
 }
 

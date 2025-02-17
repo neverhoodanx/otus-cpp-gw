@@ -29,6 +29,10 @@ class chat_server {
 	 *
 	 */
 	std::vector<std::string> get_avalible_room() const;
+	/**
+	 *
+	 */
+	void stop(bool graceful);
 
   private:
 	std::map<std::string, std::shared_ptr<chat_room>> chat_rooms_;

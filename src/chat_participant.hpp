@@ -27,5 +27,7 @@ class chat_participant {
 	 * @param msg Message to deliver.
 	 */
 	virtual void deliver(const std::string &msg) = 0;
+
+	std::string id_;
 };
 } // namespace otus::chat_server

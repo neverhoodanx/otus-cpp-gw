@@ -42,7 +42,11 @@ class chat_room {
 	 * @param msg Message to deliver.
 	 */
 	void deliver(const std::string &msg);
-
+	/**
+	 * @brief Deliver a message to all participants in the room.
+	 * @param msg Message to deliver.
+	 */
+	void deliver_to(const std::string &id, const std::string &msg);
 	/**
 	 * @brief Get a list of user_infos currently online in the room.
 	 * @return Set of user_info nicknames.

@@ -11,18 +11,25 @@ enum Types_Chat {
 	Type_IM = 1; /// @see IM
 	Type_ServiceIM = 2; /// @see ServiceIM
 	Type_WhisperIM = 3; ///
-	Type_RoomList = 4; ///
-	Type_UserList = 5;
-	Type_RoomJoin = 6;
-	Type_RoomLeft = 7;
+	Type_GetRoomList = 4; ///
+	Type_RoomList = 5; ///
+	Type_GetUserList = 6;
+	Type_UserList = 7;
+	Type_RoomJoin = 8;
+	Type_RoomLeft = 9;
+	Type_ServerMaintenance = 10;
+}
+
+message User {
+	uint32 id = 1;
+	string nick = 2;
 }
 
 /**
  * 
  */
 message Auth {
-	uint32 id = 1;
-	string nick = 2;
+	User user = 1;
 	bytes token = 3;
 }
 
@@ -30,29 +37,36 @@ message Auth {
  * 
  */
 message IM {
-	uint32 id = 1;
-	string nick = 2;
+	User user = 1;
 	string message = 3;
 }
 
 message WhisperIM {
+	User user_from = 1;
+	User user_to = 2;
+	string message = 3;
+}
 
+message GetRoomList {
 }
 
 message RoomList {
+	repeated string room_names = 1;
+}
 
+message GetUserList {
 }
 
 message UserList {
-	
+	repeated User users = 1;
 }
 
 message RoomJoin {
-
+	string room_name = 1;
 }
 
 message RoomLeft {
-	
+	string room_name = 1;
 }
 
 message ServerMaintenance {
@@ -68,14 +82,5 @@ message ServerMaintenance {
  * 
  */
 message ServiceIM {
-	enum Actions {
-		room_list = 0;
-		user_list = 1;
-		join = 2;
-		leave = 3;
-	}
-	uint32 id = 1;
-	string nick = 2;
-	Actions action = 3;
-	string data = 4;
+	string message = 1;
 }
