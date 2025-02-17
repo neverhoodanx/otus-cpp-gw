@@ -16,7 +16,7 @@ void chat_room::join(std::shared_ptr<chat_participant> participant, const user_i
 	for (auto msg : recent_msgs_)
 		participant->deliver(msg);
 
-	std::cout << "[" << name_ << "]: " << "user_info " << user_info.nickname << " joined the room."
+	std::cout << "[" << name_ << "]: " << "user_info " << participant->id_ << " joined the room."
 	          << std::endl;
 }
 
@@ -37,6 +37,16 @@ void chat_room::deliver(const std::string &msg) {
 		participant->deliver(msg);
 	}
 	std::cout << "[" << name_ << "]: " << "Delivered message: " << msg << std::endl;
+}
+
+void chat_room::deliver_to(const std::string &id, const std::string &msg) {
+	auto it = std::find_if(participants_.begin(), participants_.end(),
+	                       [&id](const std::shared_ptr<chat_participant> &participant) {
+		                       return participant->id_ == id;
+	                       });
+	if (it != participants_.end()) {
+		(*it)->deliver(msg);
+	}
 }
 
 std::set<std::string> chat_room::get_users_online() const {
