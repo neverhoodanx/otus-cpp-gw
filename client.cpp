@@ -27,7 +27,8 @@ std::vector<std::string> split_string_words(const std::string &input) {
 
 std::shared_ptr<asio::ip::tcp::socket> sk;
 
-void read_console_input(asio::io_context &io_context, const std::string &nickname) {
+void read_console_input(asio::io_context &io_context, const std::string &nickname,
+                        const std::string &token) {
 	try {
 		for (std::string rline; std::getline(std::cin, rline);) {
 			if (rline.empty()) {
@@ -45,33 +46,44 @@ void read_console_input(asio::io_context &io_context, const std::string &nicknam
 				commands.push_back("");
 			}
 			if (commands[0] == "/room_list") {
-				chat_proto::ServiceIM sim;
-				sim.set_action(chat_proto::ServiceIM_Actions_room_list);
-				sim.set_nick(nickname);
-				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
-				                                          sim.SerializeAsString());
+				chat_proto::GetRoomList msg;
+				buf = otus::chat_server::serialize_packet(chat_proto::Type_GetRoomList,
+				                                          msg.SerializeAsString());
 			} else if (commands[0] == "/user_list") {
-				chat_proto::ServiceIM sim;
-				sim.set_action(chat_proto::ServiceIM_Actions_user_list);
-				sim.set_nick(nickname);
-				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
-				                                          sim.SerializeAsString());
+				chat_proto::GetUserList msg;
+				buf = otus::chat_server::serialize_packet(chat_proto::Type_GetUserList,
+				                                          msg.SerializeAsString());
 			} else if (commands[0] == "/join") {
-				chat_proto::ServiceIM sim;
-				sim.set_action(chat_proto::ServiceIM_Actions_join);
-				sim.set_nick(nickname);
-				sim.set_data(commands[1]);
-				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
-				                                          sim.SerializeAsString());
+				chat_proto::RoomJoin msg;
+				msg.set_room_name(commands[1]);
+				buf = otus::chat_server::serialize_packet(chat_proto::Type_RoomJoin,
+				                                          msg.SerializeAsString());
 			} else if (commands[0] == "/leave") {
-				chat_proto::ServiceIM sim;
-				sim.set_action(chat_proto::ServiceIM_Actions_leave);
-				sim.set_nick(nickname);
-				buf = otus::chat_server::serialize_packet(chat_proto::Type_ServiceIM,
-				                                          sim.SerializeAsString());
+				chat_proto::RoomLeft msg;
+				buf = otus::chat_server::serialize_packet(chat_proto::Type_RoomLeft,
+				                                          msg.SerializeAsString());
+			} else if (commands[0] == "/whisper") {
+				chat_proto::WhisperIM msg;
+				auto from = msg.mutable_user_from();
+				auto to = msg.mutable_user_to();
+				from->set_nick(nickname);
+				to->set_nick(commands[1]);
+				auto sz = commands[0].size() + commands[1].size();
+				msg.set_message(rline.substr(sz));
+				buf = otus::chat_server::serialize_packet(chat_proto::Type_WhisperIM,
+				                                          msg.SerializeAsString());
+			} else if (commands[0] == "/help") {
+				std::cout << "Supported command: \n"
+				          << "- /room_list\n"
+				          << "- /user_list\n"
+				          << "- /join <room_name>\n"
+				          << "- /leave\n"
+				          << "- /whisper <nickname>\n";
 			} else {
 				chat_proto::IM msg;
-				msg.set_nick(nickname);
+				auto user = msg.mutable_user();
+				user->set_nick(nickname);
+				user->set_id("-1");
 				msg.set_message(rline);
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_IM,
 				                                          msg.SerializeAsString());
@@ -108,50 +120,77 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
 			}
 			std::size_t n_h = asio::read(socket, asio::dynamic_buffer(p.data_, 2048),
 			                             asio::transfer_exactly(p.header_.length_));
-			std::cout << "tets" << std::endl;
 			if (p.header_.tag_ == chat_proto::Type_IM) {
 				chat_proto::IM msg;
 				msg.ParseFromString(p.data_);
-				if (msg.nick() == nickname) {
+				if (msg.user().nick() == nickname) {
 					continue;
 				}
-				std::cout << msg.nick() << ": " << msg.message() << std::endl;
+				std::cout << msg.user().nick() << ": " << msg.message() << std::endl;
 				std::cout << std::flush;
 			}
 			if (p.header_.tag_ == chat_proto::Type_Auth) {
 				chat_proto::Auth msg;
 				msg.ParseFromString(p.data_);
-				if (msg.nick() != nickname) {
+				if (msg.user().nick() != nickname) {
 					continue;
 				}
-				std::cout << "Welcome to the room: Default, your ID: " << msg.id() << std::endl;
+				std::cout << "Welcome to the room: Default, your ID: " << msg.user().id()
+				          << std::endl;
 				std::cout << std::flush;
+			}
+			if (p.header_.tag_ == chat_proto::Type_ServerMaintenance) {
+				chat_proto::ServerMaintenance msg;
+				msg.ParseFromString(p.data_);
+				std::cout << "[server] ServerMaintenance: " << msg.message() << std::endl;
+				sk->close();
+				continue;
+			}
+			if (p.header_.tag_ == chat_proto::Type_RoomList) {
+				chat_proto::RoomList msg;
+				msg.ParseFromString(p.data_);
+				std::cout << "[server] /room_list:" << std::endl;
+				for (int i = 0; i < msg.room_names_size(); ++i) {
+					std::cout << " - " << msg.room_names().at(i) << std::endl;
+				}
+				continue;
+			}
+			if (p.header_.tag_ == chat_proto::Type_UserList) {
+				chat_proto::UserList msg;
+				msg.ParseFromString(p.data_);
+				std::cout << "[server] /user_list:" << std::endl;
+				for (int i = 0; i < msg.users_size(); ++i) {
+					std::cout << " - " << msg.users().at(i).nick() << std::endl;
+				}
+				continue;
+			}
+			if (p.header_.tag_ == chat_proto::Type_RoomLeft) {
+				chat_proto::RoomLeft msg;
+				msg.ParseFromString(p.data_);
+				std::cout << "[server] /leave, and join to default" << std::endl;
+				continue;
+			}
+			if (p.header_.tag_ == chat_proto::Type_RoomJoin) {
+				chat_proto::RoomJoin msg;
+				msg.ParseFromString(p.data_);
+				std::cout << "[server] /join: " << msg.room_name() << std::endl;
+				continue;
+			}
+			if (p.header_.tag_ == chat_proto::Type_WhisperIM) {
+				chat_proto::WhisperIM msg;
+				msg.ParseFromString(p.data_);
+				std::cout << "[Whisper] " << msg.user_from().nick() << ": " << msg.message()
+				          << std::endl;
+				continue;
 			}
 			if (p.header_.tag_ == chat_proto::Type_ServiceIM) {
 				chat_proto::ServiceIM msg;
 				msg.ParseFromString(p.data_);
-				if (msg.nick() != nickname) {
-					continue;
-				}
-				switch (msg.action()) {
-				case chat_proto::ServiceIM_Actions_room_list: {
-					std::cout << "[server] /room_list: \n" << msg.data() << std::endl;
-					std::cout << std::flush;
-					break;
-				}
-				case chat_proto::ServiceIM_Actions_user_list: {
-					std::cout << "[server] /user_list: \n" << msg.data() << std::endl;
-					std::cout << std::flush;
-					break;
-				}
-				case chat_proto::ServiceIM_Actions_join: {
-					std::cout << "[server] /join: \n" << msg.data() << std::endl;
-					std::cout << std::flush;
-					break;
-				}
-				default:
-					break;
-				}
+				auto str = msg.error_code() == chat_proto::ServiceIM_error_codes_ec_auth_falied
+				               ? "Auth failed!"
+				               : "Unknown errod";
+				std::cout << "[Service] " << str << ": " << msg.message() << std::endl;
+				continue;
 			}
 		}
 	} catch (const std::exception &e) {
@@ -164,25 +203,13 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
  * @param socket The socket connected to the server.
  * @param nickname The user's nickname.
  */
-asio::awaitable<void> write_messages(asio::ip::tcp::socket &socket, const std::string &nickname) {
+asio::awaitable<void> write_messages(asio::ip::tcp::socket &socket, const std::string &nickname,
+                                     const std::string &token) {
 	try {
-
-		// for (std::string line; std::getline(std::cin, line);) {
-		// 	if (line.empty()) {
-		// 		continue;
-		// 	}
-
-		// chat_proto::IM msg;
-		// msg.set_nick(nickname);
-		// msg.set_message(line);
-		// auto buf =
-		//     otus::chat_server::serialize_packet(chat_proto::Type_IM, msg.SerializeAsString());
-		// co_await asio::async_write(socket, asio::buffer(buf), asio::use_awaitable);
-		// }
-		// socket.close();
 		chat_proto::Auth msg;
-		msg.set_nick(nickname);
-		msg.set_token("super_secretny_token");
+		auto user = msg.mutable_user();
+		user->set_nick(nickname);
+		msg.set_token(token);
 		auto buf =
 		    otus::chat_server::serialize_packet(chat_proto::Type_Auth, msg.SerializeAsString());
 		co_await asio::async_write(socket, asio::buffer(buf), asio::use_awaitable);
@@ -199,7 +226,7 @@ asio::awaitable<void> write_messages(asio::ip::tcp::socket &socket, const std::s
  * @param port Server's host port.
  */
 asio::awaitable<void> client(const std::string &nickname, const std::string &host,
-                             const std::string &port) {
+                             const std::string &port, const std::string &token) {
 	asio::ip::tcp::resolver resolver(co_await asio::this_coro::executor);
 	auto endpoints = co_await resolver.async_resolve(host, port, asio::use_awaitable);
 	sk = std::make_shared<asio::ip::tcp::socket>(co_await asio::this_coro::executor);
@@ -210,27 +237,25 @@ asio::awaitable<void> client(const std::string &nickname, const std::string &hos
 	          << ". You can start typing messages...\n";
 
 	asio::co_spawn((*sk.get()).get_executor(), read_messages(*sk.get(), nickname), asio::detached);
-	// asio::co_spawn((*sk.get()).get_executor(), write_messages(*sk.get(), nickname),
-	// asio::detached);
-	co_await write_messages(*sk.get(), nickname);
+	co_await write_messages(*sk.get(), nickname, token);
 }
 
 int main(int argc, char *argv[]) {
 	try {
-		if (argc != 4) {
-			std::cerr << "Usage: chat_client <nickname> <host> <port>\n";
+		if (argc != 5) {
+			std::cerr << "Usage: chat_client <nickname> <password> <host> <port>\n";
 			return 1;
 		}
 
 		asio::io_context io_context;
 
 		std::string nickname = argv[1];
-		std::string host = argv[2];
-		std::string port = argv[3];
-
-		asio::co_spawn(io_context, client(nickname, host, port), asio::detached);
+		std::string token = argv[2];
+		std::string host = argv[3];
+		std::string port = argv[4];
+		asio::co_spawn(io_context, client(nickname, host, port, token), asio::detached);
 		std::thread input_thread(
-		    [&io_context, nickname]() { read_console_input(io_context, nickname); });
+		    [&io_context, nickname, token]() { read_console_input(io_context, nickname, token); });
 		io_context.run();
 		input_thread.join();
 	} catch (const std::exception &e) {

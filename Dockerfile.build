@@ -1,0 +1,27 @@
+# Базовый образ для сборки
+FROM gcc:11 AS builder
+
+# Установка зависимостей для загрузки и распаковки cmake
+RUN apt-get update && apt-get install -y curl tar
+RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v3.25.2/cmake-3.25.2-linux-x86_64.sh -o cmake.sh && \
+    chmod +x cmake.sh && \
+    ./cmake.sh --skip-license --prefix=/usr/local && \
+    rm cmake.sh
+
+RUN apt-get install -y python3-pip
+RUN pip install conan
+
+# Создание рабочей директории
+WORKDIR /app
+
+# Копирование исходных файлов в контейнер
+COPY . .
+
+# Сборка проекта с помощью CMake
+RUN cmake -B build_linux -S . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=/app/cmake-conan/conan_provider.cmake -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build_linux --config Release
+RUN cmake --build build_linux --config Release --target test
+RUN chmod +x /app/build_linux/message_service_srv
+
+# Определение выходного файла
+CMD ["echo", "Build complete!"]

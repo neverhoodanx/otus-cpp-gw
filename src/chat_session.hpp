@@ -5,68 +5,62 @@
  */
 #pragma once
 
-#include "chat_packet.hpp"
+#include "chat_network.hpp"
 #include "chat_participant.hpp"
 #include "chat_server.hpp"
-
-#define ASIO_HAS_CO_AWAIT
-
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/detached.hpp>
-#include <asio/io_context.hpp>
-#include <asio/ip/tcp.hpp>
-#include <asio/read_until.hpp>
-#include <asio/redirect_error.hpp>
-#include <asio/use_awaitable.hpp>
-#include <asio/write.hpp>
-
-#include <map>
+#include <memory>
 
 namespace otus::chat_server {
 /**
- * @brief Class representing a user session.
+ * @class chat_session
+ * @brief Manages an individual user session in the chat server
+ *
+ * The chat_session class handles user authentication, message parsing, and room transitions
  */
 class chat_session : public chat_participant, public std::enable_shared_from_this<chat_session> {
   public:
 	/**
-	 * @brief Ctor
+	 * @brief Constructs a chat_session instance
+	 *
+	 * @param Chat network interface
+	 * @param Chat room the user joins
+	 * @param Chat server
+	 * @param user_info User authentication information
 	 */
-	chat_session(asio::ip::tcp::socket socket, std::shared_ptr<chat_room> room, chat_server &server,
-	             const user_info &user_info);
+	chat_session(std::shared_ptr<i_chat_network> network, std::shared_ptr<chat_room> room,
+	             std::shared_ptr<chat_server> server, const user_info &user_info);
 	/**
-	 * @brief Start a chat session for the user.
+	 * @brief Starts the session by joining the chat room and listening for messages
 	 */
 	void start();
 	/**
-	 * @brief override chat_participant::deliver
+	 * @brief Delivers a message to the chat network
+	 *
+	 * @param msg The message to send
 	 */
 	void deliver(const std::string &msg) final;
-
-	static unsigned int user_id_counter; // user_info ID counter, @TODO move to server
+	/**
+	 * @brief Processes an incoming message with a specific tag
+	 *
+	 * @param tag Message type identifier
+	 * @param data The raw message data
+	 */
+	void process_message(uint32_t tag, std::string data);
 
   private:
 	/**
-	 * @brief Handle reader.
-	 */
-	asio::awaitable<void> reader();
-	/**
-	 * @brief Handle writer.
-	 */
-	asio::awaitable<void> writer();
-	/**
-	 * @brief Process proto message
-	 */
-	asio::awaitable<void> process_messages();
-	/**
-	 * @brief Stop a chat session for the user.
+	 * @brief Stops the session by leaving the chat room and disconnecting from the network
 	 */
 	void stop();
-
+	/**
+	 * @brief Processes messages of various types
+	 */
 	template <typename T> void process_message(const T &msg) {
 		std::cout << "unwrapped process message: " << msg.GetTypeName() << std::endl;
 	}
-
+	/**
+	 * @brief Parses messages of various types
+	 */
 	template <typename T> void pars_message(const std::string &data) {
 		T msg;
 		msg.ParseFromString(data);
@@ -74,15 +68,9 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 		process_message<T>(msg);
 	}
 
-	void pars_message(uint32_t tag, std::string &data);
-
-	asio::ip::tcp::socket socket_;
-	asio::steady_timer timer_;
-	asio::steady_timer timer2_;
-	std::shared_ptr<chat_room> room_;
-	chat_server &server_;
-	user_info user_info_;
-	std::deque<std::string> write_msgs_;
-	std::deque<packet> messages_;
+	std::shared_ptr<i_chat_network> network_session_; ///< Chat network interface
+	std::shared_ptr<chat_room> room_;                 ///< The chat room the session is part of
+	std::shared_ptr<chat_server> server_;             ///< Chat server reference
+	user_info user_info_;                             ///< User authentication information
 };
 } // namespace otus::chat_server
