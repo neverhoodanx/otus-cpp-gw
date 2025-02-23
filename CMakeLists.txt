@@ -47,7 +47,7 @@ find_package(asio REQUIRED)
 find_package(GTest REQUIRED)
 find_package(protobuf 5.27.0 REQUIRED)
 
-set(Protobuf_PROTOC_EXECUTABLE "/Users/neverhooda/.conan2/p/b/proto6ac2ef8bd64dd/p/bin/protoc")
+# set(Protobuf_PROTOC_EXECUTABLE "/Users/neverhooda/.conan2/p/b/proto6ac2ef8bd64dd/p/bin/protoc")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC asio::asio)
 target_link_libraries(${PROJECT_NAME}_cli PUBLIC asio::asio)
@@ -73,6 +73,15 @@ else()
         -Wall -Wextra -pedantic -Werror
     )
 endif()
+
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+set(CPACK_GENERATOR DEB)
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(CPACK_PACKAGE_CONTACT neverhooda@gmail.com)
+include(CPack)
 
 enable_testing()
 add_subdirectory(test)

@@ -1,5 +1,6 @@
 # otus-cpp-gw
 Graduation qualifying work on the topic "Messenger - Instant Messaging Service"
+- Last build: ![Last build](https://github.com/neverhoodanx/otus-cpp-gw/actions/workflows/release.yml/badge.svg)
 ---
 
 ## Requirements
@@ -15,7 +16,13 @@ A server for exchanging multi-link messages between users. It provides basic acc
 $ message_service_srv <port>
 ```
 
-### Build
+### Common build
+```sh
+cmake . -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=cmake-conan/conan_provider.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build .
+```
+
+### Build via Docker (beta)
 ```sh
 $ make build # Build images
 $ make run   # Start container
