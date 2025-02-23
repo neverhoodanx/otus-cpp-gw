@@ -5,6 +5,7 @@
  */
 
 #include "chat_room.hpp"
+#include <algorithm>
 
 namespace otus::chat_server {
 chat_room::chat_room(std::string name) : name_(name) {

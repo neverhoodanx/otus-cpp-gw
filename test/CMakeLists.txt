@@ -20,4 +20,3 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 add_test(NAME ${PROJECT_NAME}
     COMMAND ${PROJECT_NAME})
-

@@ -18,7 +18,7 @@ namespace otus::chat_server {
  * @brief Class representing the chat server and managing rooms
  *
  * The chat_server class handles the management of chat rooms, user authentication,
- * and server shutdown.
+ * and server shutdown
  */
 class chat_server {
   public:
@@ -60,10 +60,10 @@ class chat_server {
 	 *
 	 * Validates user credentials and retrieves user information from cache
 	 *
-	 * @param nick The user's nickname.
-	 * @param id The user's unique identifier.
-	 * @param token The authentication token.
-	 * @return The authenticated user information.
+	 * @param nick The user's nickname
+	 * @param id The user's unique identifier
+	 * @param token The authentication token
+	 * @return The authenticated user information
 	 */
 	user_info auth(const std::string &nick, const std::string &id, const std::string &token);
 

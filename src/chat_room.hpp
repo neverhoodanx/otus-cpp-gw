@@ -17,7 +17,7 @@ namespace otus::chat_server {
 
 /**
  * @class chat_room
- * @brief Class representing a chat room.
+ * @brief Class representing a chat room
  *
  * The chat_room class manages participants and message delivery within
  * a chat environment

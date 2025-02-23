@@ -14,7 +14,7 @@ namespace otus::chat_server {
 
 /**
  * @class user_service
- * @brief Manages user-related operations within the chat server.
+ * @brief Manages user-related operations within the chat server
  *
  * The user_service class is responsible for maintaining user information
  * and retrieving user details from cache
