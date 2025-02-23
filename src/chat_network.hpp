@@ -6,9 +6,9 @@
 #pragma once
 
 #include "chat_packet.hpp"
+#include "i_chat_network.hpp"
 
 #define ASIO_HAS_CO_AWAIT
-
 #include <asio.hpp>
 #include <deque>
 #include <functional>
@@ -22,7 +22,7 @@ namespace otus::chat_server {
  *
  * Class handles receiving and sending messages using ASIO (Asynchronous I/O).
  */
-class chat_network : public std::enable_shared_from_this<chat_network> {
+class chat_network : public i_chat_network, public std::enable_shared_from_this<chat_network> {
   public:
 	using message_handler = std::function<void(uint32_t tag, std::string data)>;
 	/**

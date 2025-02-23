@@ -27,7 +27,7 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	 * @param Chat server
 	 * @param user_info User authentication information
 	 */
-	chat_session(std::shared_ptr<chat_network> network, std::shared_ptr<chat_room> room,
+	chat_session(std::shared_ptr<i_chat_network> network, std::shared_ptr<chat_room> room,
 	             std::shared_ptr<chat_server> server, const user_info &user_info);
 	/**
 	 * @brief Starts the session by joining the chat room and listening for messages
@@ -39,8 +39,6 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	 * @param msg The message to send
 	 */
 	void deliver(const std::string &msg) final;
-
-  private:
 	/**
 	 * @brief Processes an incoming message with a specific tag
 	 *
@@ -48,6 +46,8 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 	 * @param data The raw message data
 	 */
 	void process_message(uint32_t tag, std::string data);
+
+  private:
 	/**
 	 * @brief Stops the session by leaving the chat room and disconnecting from the network
 	 */
@@ -68,9 +68,9 @@ class chat_session : public chat_participant, public std::enable_shared_from_thi
 		process_message<T>(msg);
 	}
 
-	std::shared_ptr<chat_network> network_session_; ///< Chat network interface
-	std::shared_ptr<chat_room> room_;               ///< The chat room the session is part of
-	std::shared_ptr<chat_server> server_;           ///< Chat server reference
-	user_info user_info_;                           ///< User authentication information
+	std::shared_ptr<i_chat_network> network_session_; ///< Chat network interface
+	std::shared_ptr<chat_room> room_;                 ///< The chat room the session is part of
+	std::shared_ptr<chat_server> server_;             ///< Chat server reference
+	user_info user_info_;                             ///< User authentication information
 };
 } // namespace otus::chat_server

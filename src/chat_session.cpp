@@ -8,7 +8,7 @@
 
 namespace otus::chat_server {
 
-chat_session::chat_session(std::shared_ptr<chat_network> network, std::shared_ptr<chat_room> room,
+chat_session::chat_session(std::shared_ptr<i_chat_network> network, std::shared_ptr<chat_room> room,
                            std::shared_ptr<chat_server> server, const user_info &user_info)
     : network_session_(std::move(network)), room_(std::move(room)), server_(server),
       user_info_(user_info) {

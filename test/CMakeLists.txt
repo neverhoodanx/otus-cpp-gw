@@ -6,6 +6,7 @@ set(${PROJECT_NAME}_SRC
     test_chat_pcaket.cpp
     test_chat_room.cpp
     test_chat_server.cpp
+    # test_chat_session.cpp
     test_user_service.cpp
 )
 
