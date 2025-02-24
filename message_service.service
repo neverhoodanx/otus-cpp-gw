@@ -1,0 +1,15 @@
+[Unit]
+Description=Message Service OTUS
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=neverhooda
+ExecStart=message_service_srv 9090
+TimeoutStartSec=5
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

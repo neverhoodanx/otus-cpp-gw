@@ -52,12 +52,11 @@ TEST_F(ChatRoomTest, MessageDeliveryToParticipants) {
 }
 
 TEST_F(ChatRoomTest, RecentMessagesLimit) {
-	for (int i = 0; i < 105; ++i) {
+	for (int i = 0; i < 10005; ++i) {
 		room.deliver("Message " + std::to_string(i));
 	}
 	room.join(participant, user);
-	EXPECT_EQ(participant->delivered_msgs.size(),
-	          100); // Should only receive the last 100 messages
+	EXPECT_EQ(participant->delivered_msgs.size(), 10000);
 	EXPECT_EQ(participant->delivered_msgs.front(), "Message 5");
-	EXPECT_EQ(participant->delivered_msgs.back(), "Message 104");
+	EXPECT_EQ(participant->delivered_msgs.back(), "Message 10004");
 }

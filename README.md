@@ -32,6 +32,26 @@ $ make clean # Remove containers and images
 ### Options
  skip
 
+### Service systemd 
+Create:
+```sh
+sudo cp message_service.service /etc/systemd/system/message_service.service
+```
+Register/unregister: 
+```sh
+sudo systemctl enable message_service
+sudo systemctl disable message_service
+```
+Run&Stop service:
+```sh
+sudo systemctl stop message_service
+sudo systemctl start message_service
+```
+Get logs from service:
+```sh
+sudo journalctl -eu message_service.service
+```
+
 ---
 ## Test client
 A simple console client that provides minimal working functionality for testing the chat server.
