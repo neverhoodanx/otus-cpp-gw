@@ -5,7 +5,7 @@
  */
 
 #include "chat_network.hpp"
-
+#include "chat_messages.pb.h"
 #include <asio.hpp>
 
 namespace otus::chat_server {
@@ -41,6 +41,7 @@ void chat_network::stop() {
 	socket_.close();
 	timer_.cancel();
 	timer2_.cancel();
+	message_handler_(chat_proto::Type_ServerLeft, std::string());
 }
 
 asio::awaitable<void> chat_network::reader() {

@@ -126,6 +126,16 @@ template <> void chat_session::process_message(const chat_proto::WhisperIM &msg)
 	                  serialize_packet(chat_proto::Type_WhisperIM, msg.SerializeAsString()));
 }
 
+template <> void chat_session::process_message([[maybe_unused]] const chat_proto::ServerLeft &msg) {
+	chat_proto::RoomLeft im;
+	auto user = im.mutable_user();
+	user->set_nick(user_info_.nickname);
+	user->set_id(user_info_.id);
+	im.set_room_name(room_->get_name());
+	room_->deliver(serialize_packet(chat_proto::Type_RoomLeft, im.SerializeAsString()));
+	room_->leave(shared_from_this(), user_info_);
+}
+
 void chat_session::process_message(uint32_t tag, std::string data) {
 	typedef void (chat_session::*call_parser)(const std::string &);
 	static const std::unordered_map<uint32_t, call_parser> map_hendler({
@@ -137,6 +147,7 @@ void chat_session::process_message(uint32_t tag, std::string data) {
 	    {chat_proto::Type_RoomLeft, &chat_session::pars_message<chat_proto::RoomLeft>},
 	    {chat_proto::Type_RoomJoin, &chat_session::pars_message<chat_proto::RoomJoin>},
 	    {chat_proto::Type_WhisperIM, &chat_session::pars_message<chat_proto::WhisperIM>},
+	    {chat_proto::Type_ServerLeft, &chat_session::pars_message<chat_proto::ServerLeft>},
 	});
 	auto it = map_hendler.find(tag);
 	if (it != map_hendler.end()) {

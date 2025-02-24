@@ -19,6 +19,7 @@ enum Types_Chat {
     Type_RoomJoin = 8; /// Notification about a user joining a room
     Type_RoomLeft = 9; /// Notification about a user leaving a room
     Type_ServerMaintenance = 10; /// Notification about server maintenance
+    Type_ServerLeft = 11; // Notification the server that we are leaving
 }
 
 /**
@@ -124,3 +125,8 @@ message ServiceIM {
     error_codes error_code = 1; /// Error code.
     string message = 2; /// Human-readable message
 }
+
+/**
+ * The left server message  
+ */
+message ServerLeft {}
