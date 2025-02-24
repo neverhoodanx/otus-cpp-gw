@@ -69,7 +69,7 @@ void read_console_input(asio::io_context &io_context, const std::string &nicknam
 				from->set_nick(nickname);
 				to->set_nick(commands[1]);
 				auto sz = commands[0].size() + commands[1].size();
-				msg.set_message(rline.substr(sz));
+				msg.set_message(rline.substr(sz + 1));
 				buf = otus::chat_server::serialize_packet(chat_proto::Type_WhisperIM,
 				                                          msg.SerializeAsString());
 			} else if (commands[0] == "/help") {
@@ -167,13 +167,15 @@ asio::awaitable<void> read_messages(asio::ip::tcp::socket &socket, const std::st
 			if (p.header_.tag_ == chat_proto::Type_RoomLeft) {
 				chat_proto::RoomLeft msg;
 				msg.ParseFromString(p.data_);
-				std::cout << "[server] /leave, and join to default" << std::endl;
+				std::cout << "[server] /leave"
+				          << "; user name: " << msg.user().nick() << std::endl;
 				continue;
 			}
 			if (p.header_.tag_ == chat_proto::Type_RoomJoin) {
 				chat_proto::RoomJoin msg;
 				msg.ParseFromString(p.data_);
-				std::cout << "[server] /join: " << msg.room_name() << std::endl;
+				std::cout << "[server] /join: " << msg.room_name()
+				          << "; user name: " << msg.user().nick() << std::endl;
 				continue;
 			}
 			if (p.header_.tag_ == chat_proto::Type_WhisperIM) {

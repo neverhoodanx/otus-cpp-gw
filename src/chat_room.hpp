@@ -39,8 +39,10 @@ class chat_room {
 	 *
 	 * @param participant Pointer to the participant
 	 * @param user_info The user_info structure
+	 * @param silence Very trigger age case
 	 */
-	void join(std::shared_ptr<chat_participant> participant, const user_info &user_info);
+	void join(std::shared_ptr<chat_participant> participant, const user_info &user_info,
+	          bool silence = false);
 
 	/**
 	 * @brief Removes a participant from the chat room

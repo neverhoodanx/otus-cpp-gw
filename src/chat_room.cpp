@@ -11,8 +11,14 @@ namespace otus::chat_server {
 chat_room::chat_room(std::string name) : name_(name) {
 }
 
-void chat_room::join(std::shared_ptr<chat_participant> participant, const user_info &user_info) {
+void chat_room::join(std::shared_ptr<chat_participant> participant, const user_info &user_info,
+                     bool silence) {
 	participants_.insert(participant);
+	if (silence) {
+		std::cout << "[" << name_ << "]: " << "user_info " << participant->id_
+		          << " joined the room." << std::endl;
+		return;
+	}
 	user_infos_.insert(user_info.nickname);
 	for (auto msg : recent_msgs_)
 		participant->deliver(msg);
