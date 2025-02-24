@@ -95,7 +95,7 @@ class chat_room {
 	/**
 	 * @brief Maximum number of recent messages stored in the room
 	 */
-	enum { max_recent_msgs = 100 };
+	enum { max_recent_msgs = 10000 };
 
 	/**
 	 * @brief Queue storing the most recent messages

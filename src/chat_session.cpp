@@ -77,11 +77,15 @@ void chat_session::process_message([[maybe_unused]] const chat_proto::GetUserLis
 }
 
 template <> void chat_session::process_message([[maybe_unused]] const chat_proto::RoomLeft &msg) {
+	auto session = shared_from_this();
 	chat_proto::RoomLeft im;
-	room_->leave(shared_from_this(), user_info_);
-	auto r = server_->get_room("default");
-	room_ = r;
-	room_->join(shared_from_this(), user_info_);
+	auto room_name = room_->get_name();
+	auto room = server_->get_room("default");
+	if (room->get_name() != room_name) {
+		room->join(session, user_info_);
+		room_->leave(shared_from_this(), user_info_);
+		room_ = room;
+	}
 	im.set_room_name("default");
 	room_->deliver(serialize_packet(chat_proto::Type_RoomLeft, im.SerializeAsString()));
 }
@@ -90,11 +94,12 @@ template <> void chat_session::process_message([[maybe_unused]] const chat_proto
 }
 
 template <> void chat_session::process_message(const chat_proto::RoomJoin &msg) {
+	auto session = shared_from_this();
 	chat_proto::RoomJoin im;
+	auto room = server_->get_room(msg.room_name());
+	room->join(shared_from_this(), user_info_);
 	room_->leave(shared_from_this(), user_info_);
-	auto r = server_->get_room(msg.room_name());
-	room_ = r;
-	room_->join(shared_from_this(), user_info_);
+	room_ = room;
 	im.set_room_name(msg.room_name()); //@TODO set room name from current room; it can bi default
 	room_->deliver(serialize_packet(chat_proto::Type_RoomJoin, im.SerializeAsString()));
 }
